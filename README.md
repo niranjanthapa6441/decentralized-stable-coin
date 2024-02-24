@@ -1,66 +1,51 @@
-## Foundry
+# Stablecoin
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Stablecoins are a type of cryptocurrency that is designed to maintain a stable value relative to a specific asset or basket of assets, such as fiat currencies like the US dollar, commodities like gold, or other cryptocurrencies. Unlike traditional cryptocurrencies like Bitcoin or Ethereum, which can experience significant price volatility, stablecoins aim to provide a more stable store of value and medium of exchange.
 
-Foundry consists of:
+There are generally three main types of stablecoins:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Fiat-collateralized stablecoins**: These stablecoins are backed by reserves of fiat currency held in bank accounts. Each stablecoin issued is supposed to be backed by an equivalent amount of fiat currency held in reserve. Examples include Tether (USDT), USD Coin (USDC), and TrueUSD (TUSD).
 
-## Documentation
+- **Crypto-collateralized stablecoins**: These stablecoins are backed by reserves of other cryptocurrencies. Smart contracts and algorithms maintain the stability of the stablecoin's value by adjusting the supply of the underlying cryptocurrency collateral. Examples include Dai (part of the MakerDAO ecosystem) and sUSD (part of the Synthetix platform).
 
-https://book.getfoundry.sh/
+- **Algorithmic stablecoins**: These stablecoins use algorithms to adjust the supply of the stablecoin in response to changes in demand to maintain price stability. They don't rely on collateral but rather on the smart contracts and algorithmic mechanisms to stabilize the price. Examples include Ampleforth (AMPL) and Terra (LUNA).
 
-## Usage
+Stablecoins have gained popularity for various use cases, including:
 
-### Build
+- Facilitating trading on cryptocurrency exchanges, providing traders with a stable asset to move in and out of during times of volatility.
+- Serving as a medium of exchange for decentralized finance (DeFi) applications such as lending, borrowing, and yield farming.
+- Enabling cross-border payments and remittances with lower fees and faster settlement times compared to traditional banking systems.
+- Providing a stable unit of account for decentralized applications (DApps) and smart contracts on blockchain platforms.
 
-```shell
-$ forge build
-```
+However, stablecoins also face regulatory scrutiny, especially those backed by fiat currencies, as they raise concerns about transparency, regulatory compliance, and potential risks to financial stability. Despite these challenges, stablecoins continue to play a significant role in the broader cryptocurrency ecosystem.
 
-### Test
+## Pegged, Algorithmic, and Exogenous Collateral Stablecoin Architecture
 
-```shell
-$ forge test
-```
+The stablecoin architecture we are building combines pegged, algorithmic, and exogenous collateral mechanisms to ensure stability and flexibility within the cryptocurrency ecosystem. The stablecoin will be built on the Ethereum blockchain, utilizing ERC20 standards for interoperability and efficiency.
 
-### Format
+### 1. Pegged Mechanism:
 
-```shell
-$ forge fmt
-```
+- The stablecoin will be pegged to a stable value, such as the US dollar, using a combination of algorithmic adjustments and collateral reserves.
+- The peg will be maintained through smart contract algorithms that continuously monitor and adjust the stablecoin's supply based on market demand and external factors.
 
-### Gas Snapshots
+### 2. Algorithmic Mechanism:
 
-```shell
-$ forge snapshot
-```
+- Algorithmic stability mechanisms will dynamically adjust the stablecoin's supply to maintain its pegged value.
+- Smart contracts will execute algorithms that respond to changes in demand by either minting or burning stablecoins, ensuring that the stablecoin's value remains stable relative to the pegged asset.
 
-### Anvil
+### 3. Exogenous Collateral:
 
-```shell
-$ anvil
-```
+- The stablecoin will be collateralized by external assets, specifically ERC20 tokens such as WrappedETH and WrappedBitcoin.
+- These collateral assets will be held in reserve to back the value of the stablecoin and provide liquidity.
+- Collateralization ratios and risk management strategies will be implemented to ensure the stability and security of the collateralized assets.
 
-### Deploy
+### 4. ERC20 Standards:
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+- Leveraging ERC20 standards ensures compatibility with the Ethereum ecosystem, enabling seamless integration with decentralized applications (DApps), exchanges, and wallets.
+- Interoperability with other ERC20 tokens facilitates liquidity and usability within the broader Ethereum ecosystem.
 
-### Cast
+## Maintaining the value
 
-```shell
-$ cast <subcommand>
-```
+To ensure the consistent value of our stablecoin at $1, we implement continuous monitoring through a Chainlink price feed. Our system runs a real-time feed from Chainlink, allowing us to promptly match the stablecoin's value to that of the dollar. Through a programmed function, we facilitate the exchange of Ethereum and Bitcoin for their equivalent dollar value, thereby supporting the stability of our stablecoin.
 
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+For algorithmic stability, our code incorporates a conditional mechanism. This mechanism ensures that stablecoin minting only occurs when there's sufficient collateral. Specifically, we accept Ethereum and Bitcoin as collateral, utilizing their ERC20 versions—Wrapped Ethereum (WETH) and Wrapped Bitcoin (WBTC). This exogenous collateral approach fortifies the stability of our stablecoin, reinforcing its reliability within the cryptocurrency ecosystem.
