@@ -13,7 +13,7 @@ interface IDSCEngine {
 
     function redeemCollateral() external;
 
-    function mintDSC() external;
+    function mintDSC(uint256 _amountDscToMint) external;
 
     function burnDSC() external;
 
