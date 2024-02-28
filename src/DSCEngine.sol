@@ -30,10 +30,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/Ag
  */
 contract DSCEngine is IDSCEngine, ReentrancyGuard {
     /* errors */
-    error DSCEngine__AmountProviedShouldBeMoreThanZero(
-        uint256 providedAmount,
-        string requiredAmount
-    );
+    error DSCEngine__AmountProviedShouldBeMoreThanZero();
     error DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
     error DSCEngine__TokenNotAllowed();
     error DSCEngine__TransferFailed();
@@ -65,10 +62,7 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
     /* modifiers */
     modifier moreThanZero(uint256 _amount) {
         if (_amount == 0) {
-            revert DSCEngine__AmountProviedShouldBeMoreThanZero({
-                providedAmount: _amount,
-                requiredAmount: "more than zero"
-            });
+            revert DSCEngine__AmountProviedShouldBeMoreThanZero();
         }
         _;
     }
