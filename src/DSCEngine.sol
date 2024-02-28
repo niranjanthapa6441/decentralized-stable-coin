@@ -36,11 +36,16 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
     );
     error DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
     error DSCEngine__TokenNotAllowed();
-    error DSCENGINE__TransferFailed();
+    error DSCEngine__TransferFailed();
+    error DSCEngine__BreaksHealthFactor(uint256 userHealthFactor);
+    error DSCEngine__MintFailed();
 
     /* state variables */
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
+    uint256 private constant LIQUIDATION_THRESHOLD = 50;
+    uint256 private constant LIQUIDATION_PRECISION = 100;
+    uint256 private constant MIN_HEALTH_FACTOR = 1;
 
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount))
@@ -125,7 +130,7 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
             _amountCollateral
         );
         if (!success) {
-            revert DSCENGINE__TransferFailed();
+            revert DSCEngine__TransferFailed();
         }
     }
 
@@ -142,8 +147,12 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         uint256 _amountDscToMint
     ) external override moreThanZero(_amountDscToMint) nonReentrant {
         s_DSCMinted[msg.sender] += _amountDscToMint;
-
         _revertIfHealthFactorIsBroken(msg.sender);
+
+        bool minted = i_dsc.mint(msg.sender, _amountDscToMint);
+        if (!minted) {
+            revert DSCEngine__MintFailed();
+        }
     }
 
     function burnDSC() external override {}
@@ -159,48 +168,56 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
     )
         private
         view
-        user
-        returns (uint56 _totalDscMinted, uint256 collateralValueInUsd)
+        returns (uint256 _totalDscMinted, uint256 _collateralValueInUsd)
     {
         _totalDscMinted = s_DSCMinted[user];
         _collateralValueInUsd = getAccountCollateralValueInUsd(user);
     }
 
     /*
-     *Returns how close to liquidation a user is
-     * If a use goes below 1, then they can get liquidated
+     * Returns how close to liquidation a user is
+     * If a user goes below 1, then they can get liquidated
      */
     function _healthFactor(address _user) private view returns (uint256) {
         (
             uint256 _totalDscMinted,
             uint256 _collateralValueInUsd
         ) = _getAccountInformation(_user);
+        uint256 collateralAdjustedForThreshold = ((_collateralValueInUsd *
+            LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION);
+        return ((collateralAdjustedForThreshold * PRECISION) / _totalDscMinted);
     }
 
-    function _revertIfHealthFactorIsBroken(address _user) internal view {}
+    function _revertIfHealthFactorIsBroken(address _user) internal view {
+        uint256 userHealthFactor = _healthFactor(_user);
+        if (userHealthFactor < MIN_HEALTH_FACTOR) {
+            revert DSCEngine__BreaksHealthFactor(userHealthFactor);
+        }
+    }
 
     /* Public & External view functions */
     function getAccountCollateralValueInUsd(
         address user
     ) public view returns (uint256 totalCollateralInUsd) {
         for (uint256 i = 0; i < s_collateralTokens.length; i++) {
-            address token = s_collateralTokens[i];
-            uint256 amount = s_collateralDeposited[user][token];
+            address _token = s_collateralTokens[i];
+            uint256 _amount = s_collateralDeposited[user][_token];
             totalCollateralInUsd += getUsdValue(_token, _amount);
         }
         return totalCollateralInUsd;
     }
 
     function getUsdValue(
-        address token,
-        uint256 amount
-    ) public view retuns(uint256) {
+        address _token,
+        uint256 _amount
+    ) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            s_priceFeeds[token]
+            s_priceFeeds[_token]
         );
         (, int256 price, , , ) = priceFeed.latestRoundData();
 
         return
-            ((uint256(price) * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
+            ((uint256(price) * ADDITIONAL_FEED_PRECISION) * _amount) /
+            PRECISION;
     }
 }
