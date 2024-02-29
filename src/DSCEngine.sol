@@ -368,11 +368,13 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
             PRECISION;
     }
 
-    function getAccountInformation()
+    function getAccountInformation(
+        address user
+    )
         external
         view
         returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
     {
-        return _getAccountInformation(msg.sender);
+        return _getAccountInformation(user);
     }
 }
