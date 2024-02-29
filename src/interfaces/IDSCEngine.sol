@@ -2,7 +2,11 @@
 pragma solidity ^0.8.20;
 
 interface IDSCEngine {
-    function depositCollateralAndMintDSC() external;
+    function depositCollateralAndMintDSC(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral,
+        uint256 _amountDscToMint
+    ) external;
 
     function depositCollateral(
         address _tokenCollateralAddress,
