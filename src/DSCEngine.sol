@@ -92,8 +92,33 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
     }
 
     /* external functions */
-    function depositCollateralAndMintDSC() external override {}
+    /**
+     *
+     * @param _tokenCollateralAddress The address of token to deposit as collateral
+     * @param _amountCollateral  The amount of collateral to deposit
+     * @param _amountDscToMint The amount of decantralized stable coin to mint
+     * @notice this function will deposit the collateral and mint the dsc in one transaction
+     */
+    function depositCollateralAndMintDSC(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral,
+        uint256 _amountDscToMint
+    ) external override {
+        depositCollateral(_tokenCollateralAddress, _amountCollateral);
+        mintDSC(_amountDscToMint);
+    }
 
+    function redeemCollateralForDSC() external override {}
+
+    function redeemCollateral() external override {}
+
+    function burnDSC() external override {}
+
+    function liquidate() external override {}
+
+    function getHealthFactor() external view override {}
+
+    /* public functions */
     /**
      *@notice follows CEI
      * @param _tokenCollateralAddress The address of the token to deposit the collateral
@@ -103,7 +128,7 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         address _tokenCollateralAddress,
         uint256 _amountCollateral
     )
-        external
+        public
         override
         moreThanZero(_amountCollateral)
         isAllowedToken(_tokenCollateralAddress)
@@ -128,10 +153,6 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         }
     }
 
-    function redeemCollateralForDSC() external override {}
-
-    function redeemCollateral() external override {}
-
     /**
      * @notice follows CEI
      * @param _amountDscToMint This is the amount that the user wants to mint DSC
@@ -139,7 +160,7 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
      */
     function mintDSC(
         uint256 _amountDscToMint
-    ) external override moreThanZero(_amountDscToMint) nonReentrant {
+    ) public override moreThanZero(_amountDscToMint) nonReentrant {
         s_DSCMinted[msg.sender] += _amountDscToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
 
@@ -148,12 +169,6 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
             revert DSCEngine__MintFailed();
         }
     }
-
-    function burnDSC() external override {}
-
-    function liquidate() external override {}
-
-    function getHealthFactor() external view override {}
 
     /* Private and Internal view functions */
 
