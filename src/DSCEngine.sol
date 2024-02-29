@@ -9,7 +9,6 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/Ag
 
 /**
  * @title DSC Engine
- * @author Niranjan Thapa
  * 
  * The system is designed to be as minimal as possible, and have the tokens maintain 
    a 1 token == $1 peg.
@@ -367,5 +366,13 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         return
             ((uint256(price) * ADDITIONAL_FEED_PRECISION) * _amount) /
             PRECISION;
+    }
+
+    function getAccountInformation()
+        external
+        view
+        returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
+    {
+        return _getAccountInformation(msg.sender);
     }
 }
