@@ -58,7 +58,11 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         address indexed token,
         uint256 amount
     );
-
+    event CollateralRedeemed(
+        address indexed user,
+        address indexed token,
+        uint256 amount
+    );
     /* modifiers */
     modifier moreThanZero(uint256 _amount) {
         if (_amount == 0) {
@@ -108,11 +112,21 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         mintDSC(_amountDscToMint);
     }
 
-    function redeemCollateralForDSC() external override {}
-
-    function redeemCollateral() external override {}
-
-    function burnDSC() external override {}
+    /**
+     *
+     * @param _tokenCollateralAddress The collateral address to redeeem
+     * @param _amountCollateral The amount of collateral to redeem
+     * @param _amountDscToBurn The amount of DSC to burn
+     * This function burns DSC and redeems underlying collateral in one transaction
+     */
+    function redeemCollateralForDSC(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral,
+        uint256 _amountDscToBurn
+    ) external override {
+        burnDSC(_amountDscToBurn);
+        redeemCollateral(_tokenCollateralAddress, _amountCollateral);
+    }
 
     function liquidate() external override {}
 
@@ -168,6 +182,39 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
         if (!minted) {
             revert DSCEngine__MintFailed();
         }
+    }
+
+    function burnDSC(uint256 _amount) public override moreThanZero(_amount) {
+        s_DSCMinted[msg.sender] -= _amount;
+        bool success = i_dsc.transferFrom(msg.sender, address(this), _amount);
+        if (!success) {
+            revert DSCEngine__TransferFailed();
+        }
+        i_dsc.burn(_amount);
+        _revertIfHealthFactorIsBroken(msg.sender);
+    }
+
+    function redeemCollateral(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral
+    ) public override moreThanZero(_amountCollateral) nonReentrant {
+        s_collateralDeposited[msg.sender][
+            _tokenCollateralAddress
+        ] -= _amountCollateral;
+        emit CollateralRedeemed(
+            msg.sender,
+            _tokenCollateralAddress,
+            _amountCollateral
+        );
+
+        bool success = IERC20(_tokenCollateralAddress).transfer(
+            msg.sender,
+            _amountCollateral
+        );
+        if (!success) {
+            revert DSCEngine__TransferFailed();
+        }
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     /* Private and Internal view functions */
