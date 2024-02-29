@@ -28,7 +28,11 @@ interface IDSCEngine {
 
     function burnDSC(uint256 _amount) external;
 
-    function liquidate() external;
+    function liquidate(
+        address _collateral,
+        address _user,
+        uint256 _debtToCover
+    ) external;
 
     function getHealthFactor() external view;
 }
